@@ -61,20 +61,22 @@ const loadCommand: Command = async (args, std) => {
         .then(() => taskReporter.finish(task));
 
     const endChildRunners = () => {
-      const prefixRegex = new RegExp("^" + name);
       // create static array of taskIds from activeTasks map
       Array.from(taskReporter.activeTasks.keys())
-        .filter((taskId) => prefixRegex.test(taskId))
+        .filter((taskId) => taskId.startsWith(name))
         .forEach((taskId: string) => {
-          console.log("[debug] killing: ", taskId);
           taskReporter.finish(taskId);
-          warn(std, taskId, "Retrying");
+          warn(std, taskId, "Parent task restarting. Retrying");
         });
     };
 
     const restartParentRunner = (error: string) => {
       taskReporter.finish(task);
-      warn(std, task, `${error}; clearing cache`);
+      warn(
+        std,
+        task,
+        `Error updating cache: ${error}; clearing cache and restarting`
+      );
       taskReporter.start(task);
     };
 
